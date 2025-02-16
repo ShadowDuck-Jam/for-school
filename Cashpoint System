@@ -1,0 +1,115 @@
+# Cashpoint system program for classwork
+
+from random import randint as ran
+
+def generateCard():
+    cardNum = "".join([str(ran(0,9)) for i in range(16)])
+    PIN = "".join([str(ran(0,9)) for r in range(4)])
+    return cardNum, PIN
+
+class Account:
+    def __init__(self, pCardNum, pPIN):
+        self.__CardNum = pCardNum
+        self.__PIN = pPIN
+        self.__funds = 0
+    
+    def CheckDetails(self, pCardNum, pPIN):
+        return self.__CardNum == pCardNum and self.__PIN == pPIN
+    
+    def getFunds(self):
+        return self.__funds
+    
+    def withdrawFunds(self, pAmount):
+        self.__funds -= pAmount
+    
+    def addFunds(self, pAmount):
+        self.__funds += pAmount
+
+class Cashpoint:
+    def __init__(self, pRecords):
+        self.__Records = pRecords
+        self.__Account = None
+    
+    def __validateCard(self, pCardNum, pPIN):
+        for account in self.__Records:
+            if account.CheckDetails(pCardNum, pPIN):
+                return account
+        return None
+    
+    def __logIn(self):
+        while True:
+            CardNum = input("Card number: ")
+            PIN = input("PIN: ")
+            acc = self.__validateCard(CardNum, PIN)
+            if acc != None:
+                self.__Account = acc
+                print("Successfully logged in")
+                return
+            print("Invalid details")
+    
+    def __logOut(self):
+        self.__Account = None
+    
+    def __outputmoney(self, pAmount): # dispense physical money
+        print(f"*Dispense physical money of £{pAmount}...*")
+        return
+    
+    def __enoughFunds(self, pAmount): # returns whether there is available money in the account
+        return self.__Account.getFunds() >= pAmount
+    
+    def __withdraw(self, pAmount):
+        self.__Account.withdrawFunds(pAmount)
+        self.__outputmoney(pAmount)
+
+    def __MainLoop(self):
+        while self.__Account == None: # make sure the user is logged into bank account
+            self.__logIn()
+        
+        while True:
+            print()
+            print(f"Your current balance is: £{self.__Account.getFunds()}")
+            
+            # Options
+            print("Would you like to:")
+            print("\t1. Withdraw money")
+            print("\t2. Log out")
+            choice = input("> ")
+            if choice == "1": # withdraw money
+                while True:
+                    try:
+                        amount = int(input("Enter Amount to withdraw: £"))
+                    except:
+                        print("Not a valid amount")
+                    else:
+                        if amount > 0:
+                            break
+                        else:
+                            print("Not a valid amount")
+                
+                if self.__enoughFunds(amount):
+                    self.__withdraw(amount)
+                else:
+                    print("Not enough funds")
+            elif choice == "2": # log out
+                self.__logOut()
+                print("Successfully logged out")
+                print()
+                return
+        
+    def Run(self):
+        while True:
+            print("Welcome to Cashpoint System. Log in")
+            self.__MainLoop()
+
+# Main program
+
+# Generate Cards
+details = [generateCard() for i in range(4)]
+accounts = [Account(acc[0], acc[1]) for acc in details]
+for acc in accounts:
+    acc.addFunds(ran(1,1000))
+# print(details) # UNCOMMENT THIS TO VIEW EXAMPLE BANK DETAILS
+
+
+cashpoint = Cashpoint(accounts)
+cashpoint.Run()
